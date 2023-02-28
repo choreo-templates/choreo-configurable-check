@@ -29,6 +29,9 @@ inputs:
   alertProxyURL:
     description: 'Alerting API Proxy URL'
     required: false
+outputs:
+  choreo-status:
+    description: 'Status of operation'
 runs:
   using: 'node12'
   main: 'dist/index.js'

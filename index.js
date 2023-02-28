@@ -1,9 +1,6 @@
 const core = require('@actions/core');
-// const github = require('@actions/github');
+const axios = require('axios').default;
 const fs = require('fs');
-const toml = require('toml');
-var json2toml = require('json2toml');
-var enums = require('./enums');
 
 try {
     //const configSchemaData = JSON.parse(fs.readFileSync(`target/bin/config-schema.json`, 'utf-8'));
@@ -189,7 +186,7 @@ function flattenSchema(iterObj, inKey, dots) {
 
 function sendAlert() {
     if(alertProxyUrl != "") {
-        const data = {
+        const payload = {
             "app_id": appId,
             "environment_id": envId,
             "api_version_id": apiVersionId,
@@ -197,6 +194,24 @@ function sendAlert() {
             "runId": int(runId),
             "failureReason": 1
         }
+
+        axios.post(alertProxyUrl, payload).then(
+            () => {
+                core.setOutput("choreo-configurable-check-alert-status", "sent");
+                console.log("choreo-configurable-check-alert-status", "sent");
+            }
+        ).catch((error => {
+            console.error('Error', error);
+            if (error.response) {
+                core.setOutput("choreo-status", error.response.data);
+                console.log(error.response.status);
+            } else if (error.request) {
+                console.log(error.request);
+            } else {
+                console.log('Error', error.message);
+                core.setOutput("choreo-status", "failed");
+            }
+        }))
 
         // POST call to alert proxy url
         console.log("Alerting Status : " + response.status);

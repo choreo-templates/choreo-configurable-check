@@ -3,10 +3,9 @@ const axios = require('axios').default;
 const fs = require('fs');
 
 try {
-    //const configSchemaData = JSON.parse(fs.readFileSync(`target/bin/config-schema.json`, 'utf-8'));
-    const configSchemaData = JSON.parse(fs.readFileSync(`inputs/config-schema.json`, 'utf-8'));
-    const configNames = JSON.parse(fs.readFileSync(`inputs/input.json`, 'utf-8'));
+    const configSchemaData = JSON.parse(fs.readFileSync(`target/bin/config-schema.json`, 'utf-8'));
     const dataF = core.getInput('configInput');
+    const configName = JSON.parse(dataF);
     const appName = core.getInput('appName');
     const appId = core.getInput('appId');
     const envId = core.getInput('envId');
@@ -14,6 +13,9 @@ try {
     const commitId = core.getInput('commitId');
     const runId = core.getInput('runId');
     const alertProxyUrl = core.getInput('alertProxyURL');
+
+    console.log("Processing existing input : " + configName);
+    console.log("Processing new input : " + configSchemaData);
 
     if (Object.keys(configSchemaData['properties']).length == 0) {
         console.log("Configurables not detected in latest code. skipping configurable check");
@@ -36,7 +38,6 @@ try {
     const reqArray = flattenSchemaReq(configurableData['properties'], '', [], configurableData['required']);
     const allArray = flattenSchema(configurableData['properties'], '', []);
     const nonReqArray = reduceArray(allArray, reqArray);
-    //configMatch = arrayCompare(configNames['data'], reqArray);
     const configMatch = arrayCompare(configName['data'], reqArray);
 
     if (configMatch) {
@@ -55,7 +56,7 @@ try {
                 }
                 if(!checkResult) {
                     console.log(errMsg);
-                    sendAlert();
+                    sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId);
                     return errMsg;
                 } else {
                     let successMsg = "Configurable Check Success";
@@ -63,12 +64,12 @@ try {
                 }
             } else {
                 console.log(errMsg);
-                sendAlert();
+                sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId);
                 return errMsg;
             }
         } else {
             console.log(errMsg);
-            sendAlert();
+            sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId);
             return errMsg;
         }
     }
@@ -184,37 +185,25 @@ function flattenSchema(iterObj, inKey, dots) {
     return dots;
 }
 
-function sendAlert() {
+function sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId) {
     if(alertProxyUrl != "") {
         const payload = {
             "app_id": appId,
             "environment_id": envId,
             "api_version_id": apiVersionId,
             "commitId": commitId,
-            "runId": int(runId),
+            "runId": parseInt(runId),
             "failureReason": 1
-        }
+        };
 
-        axios.post(alertProxyUrl, payload).then(
-            () => {
-                core.setOutput("choreo-configurable-check-alert-status", "sent");
-                console.log("choreo-configurable-check-alert-status", "sent");
-            }
-        ).catch((error => {
-            console.error('Error', error);
-            if (error.response) {
-                core.setOutput("choreo-status", error.response.data);
-                console.log(error.response.status);
-            } else if (error.request) {
-                console.log(error.request);
-            } else {
-                console.log('Error', error.message);
-                core.setOutput("choreo-status", "failed");
-            }
-        }))
-
-        // POST call to alert proxy url
-        console.log("Alerting Status : " + response.status);
-        console.log("Alerting Response : " + response.read().decode());
+        axios.post(alertProxyUrl, payload).then(function (response) {
+            core.setOutput("choreo-configurable-check-alert-status", "sent");
+            console.log("choreo-configurable-check-alert-status", "sent");
+            console.log("Alerting Status : " + response.status);
+          })
+          .catch(function (error) {
+            core.setOutput("choreo-status", "failed");
+            console.log(error);
+          });
     }   
 }

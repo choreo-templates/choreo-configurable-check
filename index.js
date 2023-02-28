@@ -18,15 +18,6 @@ try {
     const runId = core.getInput('runId');
     const alertProxyUrl = core.getInput('alertProxyURL');
 
-    ///
-    let configNamesd = [];
-    for (l of configNames['configurationMount']) {
-        configNamesd.push({'key':l['configKeyName'], 'type':l['valueType']})
-    }
-    const configName = {'data': configNamesd}
-    ////
-
-
     if (Object.keys(configSchemaData['properties']).length == 0) {
         console.log("Configurables not detected in latest code. skipping configurable check");
         return;
@@ -48,19 +39,16 @@ try {
     const reqArray = flattenSchemaReq(configurableData['properties'], '', [], configurableData['required']);
     const allArray = flattenSchema(configurableData['properties'], '', []);
     const nonReqArray = reduceArray(allArray, reqArray);
-    configMatch = arrayCompare(configNames['data'], reqArray);
+    //configMatch = arrayCompare(configNames['data'], reqArray);
     const configMatch = arrayCompare(configName['data'], reqArray);
-    console.log(configName['data']);
-    console.log(reqArray);
-    console.log(configMatch);
 
     if (configMatch) {
         let successMsg = "Configurable Check Success";
         console.log(successMsg);
     } else {
         let errMsg = "Error Occurred: Configurable fields doesn't match, Please retry a manual deployment providing all the corresponding configurable values"          
-        if(reduceArray(reqArray, configNames['data']).length == 0) {
-            const resultArray = reduceArray(configNames['data'], reqArray)
+        if(reduceArray(reqArray, configName['data']).length == 0) {
+            const resultArray = reduceArray(configName['data'], reqArray)
             if (resultArray.length > 0) {
                 let checkResult = true;
                 for (i of resultArray) {
@@ -134,39 +122,30 @@ function reduceArray(a, b) {
 function flattenSchemaReq(iterObj, inKey, dots, reqFields) {
     if (iterObj !== null && typeof (iterObj) === 'object' && !Array.isArray(iterObj)) {
         for (let key of Object.keys(iterObj)) {
-            console.log("Iterating : " + key);
             if (reqFields.length > 0 && reqFields.includes(key)) {
                 if (typeof (iterObj[key]) === 'object' && 'properties' in iterObj[key]) {
-                    console.log("Has Properties for : " + key);
                     if ('required' in iterObj[key]) {
-                        console.log("Has Required for : " + key);
                         flattenSchemaReq(iterObj[key]['properties'], inKey === '' ? key : inKey + '.' + key , dots, iterObj[key]['required']);
                     } else {
                         flattenSchemaReq(iterObj[key]['properties'], inKey === '' ? key : inKey + '.' + key , dots, []);
                     }
                 } else {
-                    console.log("No Properties for : " + key);
                     val = '';
                     if(iterObj[key] !== null && typeof (iterObj[key]) === 'object' && !Array.isArray(iterObj[key]) && key !== 'items') {
                         val = (inKey === '') ? key : '.' + key ;
-                        console.log("No Properties but object : " + inKey + val);
                         flattenSchemaReq(iterObj[key], inKey + val, dots, []);
                     } else {
-                        console.log("No Properties Not object : " + key);
                         if(key == 'type' || key == 'properties' || key == 'anyOf' || key == 'enum') {
                             flattenSchemaReq(iterObj[key], inKey + val, dots, []);
                         }
                     }
                 }
             } else if (reqFields.length == 0) {
-                console.log("No Properties for : " + key);
                 val = '';
                 if(iterObj[key] !== null && typeof (iterObj[key]) === 'object' && !Array.isArray(iterObj[key]) && key !== 'items') {
                     val = (inKey === '') ? key : '.' + key ;
-                    console.log("No Properties but object : " + inKey + val);
                     flattenSchemaReq(iterObj[key], inKey + val, dots, []);
                 } else {
-                    console.log("No Properties Not object : " + key);
                     if(key == 'type' || key == 'properties' || key == 'anyOf' || key == 'enum') {
                         flattenSchemaReq(iterObj[key], inKey + val, dots, []);
                     }
@@ -174,10 +153,8 @@ function flattenSchemaReq(iterObj, inKey, dots, reqFields) {
             }
         }
     } else if(Array.isArray(iterObj)) {
-        console.log("Is array : " + inKey);
         dots.push({'key':inKey, 'type':''});
     } else {
-        console.log("Leaf node : " + inKey);
         dots.push({'key':inKey, 'type':iterObj});
     }
 
@@ -187,19 +164,14 @@ function flattenSchemaReq(iterObj, inKey, dots, reqFields) {
 function flattenSchema(iterObj, inKey, dots) {
     if (iterObj !== null && typeof (iterObj) === 'object' && !Array.isArray(iterObj)) {
         for (let key of Object.keys(iterObj)) {
-            console.log("Iterating : " + key);
             if (typeof (iterObj[key]) === 'object' && 'properties' in iterObj[key]) {
-                console.log("Has Properties for : " + key);
                 flattenSchema(iterObj[key]['properties'], inKey === '' ? key : inKey + '.' + key , dots);
             } else {
-                console.log("No Properties for : " + key);
                 val = '';
                 if(iterObj[key] !== null && typeof (iterObj[key]) === 'object' && !Array.isArray(iterObj[key]) && key !== 'items') {
                     val = (inKey === '') ? key : '.' + key ;
-                    console.log("No Properties but object : " + inKey + val);
                     flattenSchema(iterObj[key], inKey + val, dots);
                 } else {
-                    console.log("No Properties Not object : " + key);
                     if(key == 'type' || key == 'properties' || key == 'anyOf' || key == 'enum') {
                         flattenSchema(iterObj[key], inKey + val, dots, []);
                     }
@@ -207,10 +179,8 @@ function flattenSchema(iterObj, inKey, dots) {
             }
         }
     } else if(Array.isArray(iterObj)) {
-        console.log("Is array : " + inKey);
         dots.push({'key':inKey, 'type':''});
     } else {
-        console.log("Leaf node : " + inKey);
         dots.push({'key':inKey, 'type':iterObj});
     }
 

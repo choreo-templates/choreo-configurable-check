@@ -14,8 +14,8 @@ try {
     const runId = core.getInput('runId');
     const alertProxyUrl = core.getInput('alertProxyURL');
 
-    console.log("Processing existing input : " + configName);
-    console.log("Processing new input : " + configSchemaData);
+    console.log("Processing existing input : " + JSON.stringify(configName));
+    console.log("Processing new input : " + JSON.stringify(configSchemaData));
 
     if (Object.keys(configSchemaData['properties']).length == 0) {
         console.log("Configurables not detected in latest code. skipping configurable check");

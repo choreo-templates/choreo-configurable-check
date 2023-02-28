@@ -1,0 +1,34 @@
+name: 'Choreo Configurable Check'
+description: 'Support to check configurable lists for automated deployement in choreo'
+author: WSO2
+branding:
+  icon: 'arrow-up-circle'
+  color: 'orange'
+inputs:
+  configInput:
+    description: 'List of existing configs'
+    required: false
+  appName:
+    description: 'Application Name'
+    required: false
+  appId:
+    description: 'Application ID'
+    required: false
+  envId:
+    description: 'Environment ID'
+    required: false
+  versionId:
+    description: 'API Version ID'
+    required: false
+  commitId:
+    description: 'Source Commit ID'
+    required: false
+  runId:
+    description: 'Run ID'
+    required: false
+  alertProxyURL:
+    description: 'Alerting API Proxy URL'
+    required: false
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

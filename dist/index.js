@@ -9338,7 +9338,6 @@ const fs = __nccwpck_require__(7147);
 try {
     const subPath = core.getInput('subPath');
     let schemaPath = 'target/bin/config-schema.json';
-    console.log("Executing configurable check in working directory : " + subPath);
     if (subPath) {
         const subPathF = !subPath.endsWith('/') ? subPath.concat('/') : subPath;
         schemaPath = subPathF.concat(schemaPath);

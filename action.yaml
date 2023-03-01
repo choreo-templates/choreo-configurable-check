@@ -29,6 +29,9 @@ inputs:
   alertProxyURL:
     description: 'Alerting API Proxy URL'
     required: false
+  subPath:
+    description: 'Working directory of script'
+    required: false
 outputs:
   choreo-status:
     description: 'Status of operation'

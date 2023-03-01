@@ -5,7 +5,6 @@ const fs = require('fs');
 try {
     const subPath = core.getInput('subPath');
     let schemaPath = 'target/bin/config-schema.json';
-    console.log("Executing configurable check in working directory : " + subPath);
     if (subPath) {
         const subPathF = !subPath.endsWith('/') ? subPath.concat('/') : subPath;
         schemaPath = subPathF.concat(schemaPath);

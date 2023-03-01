@@ -52,8 +52,10 @@ try {
     } else {
         let errMsg = "Error Occurred: Configurable fields doesn't match, Please retry a manual deployment providing all the corresponding configurable values"          
         if(reduceArray(reqArray, configName['data']).length == 0) {
+            //If there are no new keys
             const resultArray = reduceArray(configName['data'], reqArray)
             if (resultArray.length > 0) {
+                // If there are removed keys
                 let checkResult = true;
                 for (i of resultArray) {
                     if (!objExistsInArray(i, nonReqArray)) {
@@ -100,12 +102,14 @@ function objExistsInArray(inputObj, inputArray){
 
 function arrayCompare(a, b) {
     let result = true;
-    for (i of Object.keys(a)) {
-        if(!objExistsInArray(a[i], b)){
-            result = false;
-            break;
-        }
-    }
+    // Check whether all the old keys are there in new keyset
+    // for (i of Object.keys(a)) {
+    //     if(!objExistsInArray(a[i], b)){
+    //         result = false;
+    //         break;
+    //     }
+    // }
+    // Check whether all the new keys are there in old keyset
     for (j of Object.keys(b)) {
         if(!objExistsInArray(b[j], a)){
             result = false;

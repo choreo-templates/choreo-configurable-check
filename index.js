@@ -4,8 +4,13 @@ const fs = require('fs');
 
 try {
     const subPath = core.getInput('subPath');
-    const subPathF = !subPath.endsWith('/') ? subPath.concat('/') : subPath;
-    const configSchemaData = JSON.parse(fs.readFileSync(subPathF + `target/bin/config-schema.json`, 'utf-8'));
+    let schemaPath = 'target/bin/config-schema.json';
+    if (subPath) {
+        console.log("Executing configurable check in working directory : " + subPath);
+        const subPathF = !subPath.endsWith('/') ? subPath.concat('/') : subPath;
+        schemaPath = subPathF.concat(schemaPath);
+    }
+    const configSchemaData = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
     const dataF = core.getInput('configInput');
     const configName = JSON.parse(dataF);
     const appName = core.getInput('appName');

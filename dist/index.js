@@ -9336,7 +9336,14 @@ const axios = (__nccwpck_require__(9516)["default"]);
 const fs = __nccwpck_require__(7147);
 
 try {
-    const configSchemaData = JSON.parse(fs.readFileSync(`target/bin/config-schema.json`, 'utf-8'));
+    const subPath = core.getInput('subPath');
+    let schemaPath = 'target/bin/config-schema.json';
+    console.log("Executing configurable check in working directory : " + subPath);
+    if (subPath) {
+        const subPathF = !subPath.endsWith('/') ? subPath.concat('/') : subPath;
+        schemaPath = subPathF.concat(schemaPath);
+    }
+    const configSchemaData = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
     const dataF = core.getInput('configInput');
     const configName = JSON.parse(dataF);
     const appName = core.getInput('appName');
@@ -9390,6 +9397,7 @@ try {
                 if(!checkResult) {
                     console.log(errMsg);
                     sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId);
+                    core.setFailed(errMsg);
                     return errMsg;
                 } else {
                     let successMsg = "Configurable Check Success";
@@ -9398,11 +9406,13 @@ try {
             } else {
                 console.log(errMsg);
                 sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId);
+                core.setFailed(errMsg);
                 return errMsg;
             }
         } else {
             console.log(errMsg);
             sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId);
+            core.setFailed(errMsg);
             return errMsg;
         }
     }

@@ -57,6 +57,7 @@ try {
                 if(!checkResult) {
                     console.log(errMsg);
                     sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId);
+                    core.setFailed(errMsg);
                     return errMsg;
                 } else {
                     let successMsg = "Configurable Check Success";
@@ -65,11 +66,13 @@ try {
             } else {
                 console.log(errMsg);
                 sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId);
+                core.setFailed(errMsg);
                 return errMsg;
             }
         } else {
             console.log(errMsg);
             sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId);
+            core.setFailed(errMsg);
             return errMsg;
         }
     }

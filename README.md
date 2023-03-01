@@ -18,4 +18,5 @@ Checks the generated configurable list against the earlier list
        commitId: ${{secrets.COMMIT_ID}}
        runId: ${{secrets.RUN_ID}}
        alertProxyURL: ${{secrets.ALERT_PROXY_URL}}
+       subPath: ${{secrets.SUB_PATH}}
 ```

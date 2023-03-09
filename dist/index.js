@@ -9354,12 +9354,11 @@ try {
     const alertProxyUrl = core.getInput('alertProxyURL');
     const existingConfigSchemaEncoded = core.getInput('existingConfigSchema');
     const existingConfigSchemaData = JSON.parse(Buffer.from(existingConfigSchemaEncoded, 'base64'));
-    const cronExpression = core.getInput('cronExpression');
-    const componentType = core.getInput('componentType');
+    const cronExpression = core.getInput('cronFrequencyAvailability');
     const configurableUpdateURL = core.getInput('configurableUpdateURL');
 
     // Check for cron expression
-    if (componentType == "scheduledTask" && !cronExpression) {
+    if (!cronExpression && cronExpression == "false") {
         console.log("Cron expression not found");
         sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, 102);
         core.setFailed("Cron expression not found");
@@ -9615,9 +9614,9 @@ function sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, f
 function updateRudderWithNewConfigurables(configurableUpdateURL, appId, envId, apiVersionId, commitId, runId, status) {
     if(configurableUpdateURL != "") {
         const payload = {
-            "app_id": appId,
-            "environment_id": envId,
-            "api_version_id": apiVersionId,
+            "appId": appId,
+            "environmentId": envId,
+            "apiVersionId": apiVersionId,
             "commitId": commitId,
             "runId": parseInt(runId),
             "status": status

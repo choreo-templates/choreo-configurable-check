@@ -38,9 +38,6 @@ inputs:
   cronFrequencyAvailability:
     description: 'Cron frequency availability'
     required: false
-  configurableUpdateURL:
-    description: 'Configurable Update API Proxy URL'
-    required: false
 outputs:
   choreo-status:
     description: 'Status of operation'

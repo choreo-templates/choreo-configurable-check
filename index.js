@@ -5,6 +5,7 @@ const fs = require('fs');
 try {
     const subPath = core.getInput('subPath');
     let schemaPath = 'target/bin/config-schema.json';
+
     if (subPath) {
         const subPathF = !subPath.endsWith('/') ? subPath.concat('/') : subPath;
         schemaPath = subPathF.concat(schemaPath);
@@ -22,7 +23,6 @@ try {
     const existingConfigSchemaEncoded = core.getInput('existingConfigSchema');
     const existingConfigSchemaData = JSON.parse(Buffer.from(existingConfigSchemaEncoded, 'base64'));
     const cronExpression = core.getInput('cronFrequencyAvailability');
-    const configurableUpdateURL = core.getInput('configurableUpdateURL');
 
     // Check for cron expression
     if (!cronExpression && cronExpression == "false") {
@@ -79,7 +79,8 @@ try {
     if (configMatch) {
         let successMsg = "Configurable Check Success";
         console.log(successMsg);
-        updateRudderWithNewConfigurables(configurableUpdateURL, appId, envId, apiVersionId, commitId, runId, "success");
+        core.setOutput("choreoConfigurableCheck", "success");
+        core.exportVariable("CONFIG_CHECK_STATUS","success");
     } else {
         let errMsg = "Error Occurred: Configurable fields doesn't match, Please retry a manual deployment providing all the corresponding configurable values"          
         if(reduceArray(reqArray, configName['data']).length == 0) {
@@ -101,7 +102,8 @@ try {
                 } else {
                     let successMsg = "Configurable Check Success";
                     console.log(successMsg);
-                    updateRudderWithNewConfigurables(configurableUpdateURL, appId, envId, apiVersionId, commitId, runId, "success");
+                    core.setOutput("choreoConfigurableCheck", "success");
+                    core.exportVariable("CONFIG_CHECK_STATUS","success");
                 }
             } else {
                 console.log(errMsg);
@@ -269,6 +271,7 @@ function sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, f
         axios.post(alertProxyUrl, payload).then(function (response) {
             core.setOutput("choreo-configurable-check-alert-status", "sent");
             console.log("choreo-configurable-check-alert-status", "sent");
+            core.exportVariable("CONFIG_CHECK_STATUS","failure");
             console.log("Alerting Status : " + response.status);
           })
           .catch(function (error) {
@@ -278,25 +281,4 @@ function sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, f
     }   
 }
 
-function updateRudderWithNewConfigurables(configurableUpdateURL, appId, envId, apiVersionId, commitId, runId, status) {
-    if(configurableUpdateURL != "") {
-        const payload = {
-            "appId": appId,
-            "environmentId": envId,
-            "apiVersionId": apiVersionId,
-            "commitId": commitId,
-            "runId": parseInt(runId),
-            "status": status
-        };
 
-        axios.post(configurableUpdateURL, payload).then(function (response) {
-            core.setOutput("choreo-configurable-update-status", "updated");
-            console.log("choreo-configurable-update-status", "updated");
-            console.log("Config Update Status : " + response.status);
-          })
-          .catch(function (error) {
-            core.setOutput("choreo-status", "failed");
-            console.log(error);
-          });
-    }   
-}

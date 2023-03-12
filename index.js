@@ -3,9 +3,13 @@ const axios = require('axios').default;
 const fs = require('fs');
 
 try {
+
+    const GENERIC_FAILURE = 100;
+    const CONFIGURABLE_MISMATCH_FAILURE = 101;
+    const CRON_NOT_AVAILABLE_FAILURE = 102;
+
     const subPath = core.getInput('subPath');
     let schemaPath = 'target/bin/config-schema.json';
-
     if (subPath) {
         const subPathF = !subPath.endsWith('/') ? subPath.concat('/') : subPath;
         schemaPath = subPathF.concat(schemaPath);
@@ -25,9 +29,9 @@ try {
     const cronExpression = core.getInput('cronFrequencyAvailability');
 
     // Check for cron expression
-    if (!cronExpression && cronExpression == "false") {
+    if (cronExpression && cronExpression == "CRON_NOT_AVAIBLE") {
         console.log("Cron expression not found");
-        sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, 102);
+        sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, CRON_NOT_AVAILABLE_FAILURE);
         core.setFailed("Cron expression not found");
         return;
     }
@@ -52,7 +56,7 @@ try {
 
     // Org Module check
     let orgModuleCheck = false;
-    if ((Object.keys(configSchemaData['properties']).includes(orgName))) {
+    if (Object.keys(configSchemaData['properties']).includes(orgName)) {
         oldModuleName = Object.keys(existingConfigSchemaData['properties'][orgName]['properties'])[0];
         if(Object.keys(configSchemaData['properties'][orgName]['properties']).includes(oldModuleName)) {
             orgModuleCheck = true;
@@ -61,7 +65,7 @@ try {
 
     if(!orgModuleCheck) {
         console.log("Ballerina module name/org is changed");
-        sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, 101);
+        sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, CONFIGURABLE_MISMATCH_FAILURE);
         core.setFailed("Ballerina module name/org is changed");
         return;
     }
@@ -96,7 +100,7 @@ try {
                 }
                 if(!checkResult) {
                     console.log(errMsg);
-                    sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, 101);
+                    sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, CONFIGURABLE_MISMATCH_FAILURE);
                     core.setFailed(errMsg);
                     return errMsg;
                 } else {
@@ -107,13 +111,13 @@ try {
                 }
             } else {
                 console.log(errMsg);
-                sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, 101);
+                sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, CONFIGURABLE_MISMATCH_FAILURE);
                 core.setFailed(errMsg);
                 return errMsg;
             }
         } else {
             console.log(errMsg);
-            sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, 101);
+            sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, CONFIGURABLE_MISMATCH_FAILURE);
             core.setFailed(errMsg);
             return errMsg;
         }
@@ -232,18 +236,25 @@ function flattenSchema(iterObj, inKey, dots) {
     return dots;
 }
 
-function constructOutputArray(allArray, reqArray, refArray) {
-    const outputArray = [];
-    for (a of allArray) {
+/**
+ * Constructs data needed for config-schema-values file
+ * @param allData 
+ * @param requiredData 
+ * @param referenceData 
+ * @returns flattened config data with values
+ */
+function constructOutputArray(allData, requiredData, referenceData) {
+    const outputData = [];
+    for (a of allData) {
         const outputItem = {
             "config_key_name": a['key'],
             "value_type": a['type'],
-            "value_or_source": getValueFromFlattenArray(a, refArray),
-            "is_required": objExistsInArray(a, reqArray),
+            "value_or_source": getValueFromFlattenArray(a, referenceData),
+            "is_required": objExistsInArray(a, requiredData),
         }
-        outputArray.push(outputItem);
+        outputData.push(outputItem);
     }
-    return outputArray;
+    return outputData;
 }
 
 function getValueFromFlattenArray(compObject, inputArray) {
@@ -271,7 +282,7 @@ function sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, f
         axios.post(alertProxyUrl, payload).then(function (response) {
             core.setOutput("choreo-configurable-check-alert-status", "sent");
             console.log("choreo-configurable-check-alert-status", "sent");
-            core.exportVariable("CONFIG_CHECK_STATUS","failure");
+            core.exportVariable("CONFIG_CHECK_STATUS", "failure");
             console.log("Alerting Status : " + response.status);
           })
           .catch(function (error) {
@@ -280,5 +291,3 @@ function sendAlert(alertProxyUrl, appId, envId, apiVersionId, commitId, runId, f
           });
     }   
 }
-
-

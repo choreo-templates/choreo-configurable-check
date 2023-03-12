@@ -32,6 +32,12 @@ inputs:
   subPath:
     description: 'Working directory of script'
     required: false
+  existingConfigSchema:
+    description: 'Existing Config Schema'
+    required: false
+  cronFrequencyAvailability:
+    description: 'Cron frequency availability'
+    required: false
 outputs:
   choreo-status:
     description: 'Status of operation'

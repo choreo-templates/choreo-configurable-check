@@ -73,7 +73,11 @@ try {
     const moduleList = Object.keys(existingConfigSchemaData['properties'][orgName]['properties']);
     const configurableData = configSchemaData['properties'][orgName]['properties'][moduleList[0]];
 
-    const reqArray = flattenSchemaReq(configurableData['properties'], '', [], configurableData['required']);
+    let reqConfigFields = [];
+    if ('required' in configurableData) {
+        reqConfigFields = configurableData['required'];
+    }
+    const reqArray = flattenSchemaReq(configurableData['properties'], '', [], reqConfigFields);
     const allArray = flattenSchema(configurableData['properties'], '', []);
     const nonReqArray = reduceArray(allArray, reqArray);
     const configMatch = arrayCompare(configName['data'], reqArray);
